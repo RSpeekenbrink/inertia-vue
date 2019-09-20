@@ -11,6 +11,10 @@ export default {
       type: String,
       required: true,
     },
+    tag: {
+      type: String,
+      default: 'a',
+    },
     method: {
       type: String,
       default: 'get',
@@ -29,7 +33,7 @@ export default {
     },
   },
   render(h, { props, data, children }) {
-    return h('a', {
+    return h(props.tag, {
       ...data,
       attrs: {
         ...data.attrs,
