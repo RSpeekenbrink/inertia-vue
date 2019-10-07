@@ -1,7 +1,6 @@
 import { Inertia, shouldIntercept } from '@inertiajs/inertia'
 
 export default {
-  functional: true,
   props: {
     data: {
       type: Object,
@@ -28,33 +27,52 @@ export default {
       default: false,
     },
   },
-  render(h, { props, data, children }) {
+  render(h) {
+    const handler = event => {
+      if (shouldIntercept(event)) {
+        event.preventDefault()
+
+        Inertia.visit(this.href, {
+          data: this.data,
+          method: this.method,
+          replace: this.replace,
+          preserveScroll: this.preserveScroll,
+          preserveState: this.preserveState,
+        })
+      }
+    }
+
+    const scopedSlot = !this.$scopedSlots.$hasNormal &&
+      this.$scopedSlots.default &&
+      this.$scopedSlots.default({
+        href: this.href,
+        navigate: handler,
+      })
+
+    if (scopedSlot) {
+      if (scopedSlot.length === 1) {
+        return scopedSlot[0]
+      } else if (scopedSlot.length > 1 || !scopedSlot.length) {
+        return scopedSlot.length === 0 ? h() : h('span', {}, scopedSlot)
+      }
+    }
+
     return h('a', {
-      ...data,
+      ...this,
       attrs: {
-        ...data.attrs,
-        href: props.href,
+        ...this.attrs,
+        href: this.href,
       },
       on: {
-        ...(data.on || {}),
+        ...(this.on || {}),
         click: event => {
-          if (data.on && data.on.click) {
-            data.on.click(event)
+          if (this.on && this.on.click) {
+            this.on.click(event)
           }
 
-          if (shouldIntercept(event)) {
-            event.preventDefault()
-
-            Inertia.visit(props.href, {
-              data: props.data,
-              method: props.method,
-              replace: props.replace,
-              preserveScroll: props.preserveScroll,
-              preserveState: props.preserveState,
-            })
-          }
+          handler(event)
         },
       },
-    }, children)
+    }, this.$slots.default)
   },
 }
